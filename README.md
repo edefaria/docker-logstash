@@ -107,7 +107,7 @@ By default "logstash.conf" is generated with:
 * filter "foo" on all input to add a specific field to your stream
 * output gelf modified by docker environment variable.
 
-Initial CONFIF: logstash.conf
+Initial configuration: logstash.conf
 ```
 input {
   tcp {
