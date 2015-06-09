@@ -121,8 +121,18 @@ fi
 
 /etc/init.d/rsyslog stop >/dev/null 2>/dev/null
 
+kill_logstash ()
+{
+  kill $(ps ux | grep logstash | grep java | grep agent | awk '{ print $2}')
+  exit
+}
+
+trap kill_logstash SIGINT SIGTERM SIGHUP
+
 if [ "x$DEBUG" = "x1" -o "x$DEBUG" = "xtrue" ] ; then
-  /opt/logstash/bin/logstash agent -f /etc/logstash/conf.d --debug
+  /opt/logstash/bin/logstash agent -f /etc/logstash/conf.d --debug &
 else
-  /opt/logstash/bin/logstash agent -f /etc/logstash/conf.d 
+  /opt/logstash/bin/logstash agent -f /etc/logstash/conf.d &
 fi
+pid=$!
+wait $pid
