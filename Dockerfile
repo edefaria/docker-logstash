@@ -36,7 +36,7 @@ RUN        cd /tmp && wget -q https://github.com/elastic/logstash/archive/v${LOG
 # Install patched version of gelf-rb/logstash-output-gelf
 RUN        cd /opt && \
            git clone https://github.com/edefaria/patch-gelf-output-logstash && \
-           /opt/patch-gelf-output-logstas/update-gelf.sh
+           /opt/patch-gelf-output-logstash/update-gelf.sh
 
 VOLUME     [ "/etc/logstash/conf.d" ]
 
