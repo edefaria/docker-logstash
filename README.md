@@ -7,7 +7,8 @@
 
 ### Services
   * logstash
-  * input syslog (tcp port 1514 by default)
+  * input syslog (tcp port 1514 by default or port 5514)
+  * input syslog (tcp with tls port 10514 by default)
   * input lumberjack/logstash-forwaders (tcp with tls port 5043 by default)
   * input json (tcp port 5001 by default)
   * input gelf (udp port 12200 by default)

@@ -23,13 +23,12 @@ RUN        apt-get update -qq && \
            apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install logstash
-ENV        LOGSTASH_VERSION 1.5.0
+ENV        LOGSTASH_VERSION 1.5.1
 RUN        cd /tmp && wget -q https://github.com/elastic/logstash/archive/v${LOGSTASH_VERSION}.tar.gz && \
            tar -xzf v${LOGSTASH_VERSION}.tar.gz -C /opt && \
            mv /opt/logstash-${LOGSTASH_VERSION} /opt/logstash && \
            rm -f v${LOGSTASH_VERSION}.tar.gz && \
            cd /opt/logstash  && \
-           sed -i 's/\("jruby" => { "version" => \)\("1.7.19"\)\(, "sha1" => \).*/\1"1.7.20"\3"3c11f01d38b9297cef2c281342f8bb799772e481" },/' rakelib/vendor.rake && \
            rake bootstrap >/dev/null && \
            mkdir -p /etc/logstash/conf.d
 
@@ -40,6 +39,8 @@ RUN        cd /opt && \
 
 VOLUME     [ "/etc/logstash/conf.d" ]
 
+COPY       grok-patterns /opt/logstash/patterns/grok-patterns
+#COPY       conf.d        /opt/conf.d
 COPY       logstash.conf /opt/logstash.conf
 COPY       logstash.crt  /opt/logstash-forwarder/logstash.crt
 COPY       logstash.key  /opt/logstash-forwarder/logstash.key
