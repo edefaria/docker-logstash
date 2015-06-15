@@ -1,4 +1,4 @@
-## docker-logstash : Docker image with logstash 1.5.0 + TCP/TLS gelf support
+## docker-logstash : Docker image with logstash 1.5.X + TCP/TLS gelf support
 
 * [DockerFile](https://github.com/edefaria/docker-logstash)
 * [Logstash](https://github.com/elastic/logstash)
