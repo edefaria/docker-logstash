@@ -24,13 +24,14 @@ $ docker build -t docker-logstash .
 ### RUN
 
 ```
-docker run -p 1514:1514 -p 5043:5043 -p 5001:5001 -p 12200:12200/udp -e TIMEZONE=Europe/Paris --name docker-logstash docker-logstash
+docker run -p 1514:1514 -p 5043:5043 -p 5001:5001 -p 10514:10514 -p 12200:12200/udp -e TIMEZONE=Europe/Paris --name docker-logstash docker-logstash
 ```
 
 ### Usage
 INPUT Possible :
 ```
 Port 1514 is required if you use syslog.
+Port 10514 is required if you use syslog with tls on tcp.
 Port 5043 is required if you use logstash-forwader/lumberjack.
 Port 12200/udp is required if you use gelf (UDP only).
 Port 5001 is required if you use json on TCP.
@@ -58,6 +59,17 @@ Edit: /etc/rsyslog.d/60-forward.conf
 ```
 $template raw,"<%pri%>%timestamp:::date-rfc3339% %hostname% %syslogtag%%msg%\n"
 *.* @@$HOSTNAME:1514;raw
+```
+
+  * rsyslog-gnutls
+
+Edit: /etc/rsyslog.d/60-forward.conf
+```
+$DefaultNetstreamDriver gtls # use gtls netstream driver
+$ActionSendStreamDriverMode 1 # require TLS for the connection
+$ActionSendStreamDriverAuthMode anon # server is NOT authenticated
+$template GRAYLOGRFC5424,"<%PRI%>%PROTOCOL-VERSION% %timestamp:::date-rfc3339% %HOSTNAME% %app-name% %procid% %STRUCTURED-DATA% %msg%\n"
+*.* @@(o)$HOSTNAME:10514;GRAYLOGRFC5424
 ```
 
   * syslog-ng
