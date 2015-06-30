@@ -1,0 +1,48 @@
+###############
+# CUSTOM GROK #
+###############
+DHCPD ((%{SYSLOGTIMESTAMP:timestamp})\s*(%{HOSTNAME:hostname})\s*dhcpd\S+\s*(%{WORD:dhcp_action})?.*[for|on] (%{IPV4:dhcp_client_ip})?.*[from|to] (%{COMMONMAC:dhcp_client_mac})?.*via (%{USERNAME:interface}))
+IPTABLES ((%{SYSLOGTIMESTAMP:nf_timestamp})\s*(%{HOSTNAME:nf_host})\s*kernel\S+\s*(%{WORD:nf_action})?.*IN=(%{USERNAME:nf_in_interface})?.*OUT=(%{USERNAME:nf_out_interface})?.*MAC=(%{COMMONMAC:nf_dst_mac}):(%{COMMONMAC:nf_src_mac})?.*SRC=(%{IPV4:nf_src_ip}).*DST=(%{IPV4:nf_dst_ip}).*PROTO=(%{WORD:nf_protocol}).?*SPT=(%{INT:nf_src_port}?.*DPT=%{INT:nf_dst_port}?.*))
+DNS ((%{MONTHDAY:day})-(%{MONTH:month})-(%{YEAR:year}) (%{TIME:timestamp}) client (%{IPV4:dns_client_ip})#(%{NONNEGINT:dns_uuid})?.*query: (%{HOSTNAME:dns_dest}) (%{WORD:dns_type}) (%{WORD:dns_record})?.*(%{IPV4:dns_server}))
+PGSQL ((%{SYSLOGTIMESTAMP:pgsql_timestamp}) (%{HOSTNAME:pgsql_hostname})?.*SAST >(%{WORD:pgsql_severity}):  (%{GREEDYDATA:pgsql_message}))
+SQUID ((%{DATA:squid_timestamp_unix}) (%{INT:squid_time_elapsed_ms}) (%{IPV4:squid_client_ip}) (%{DATA:squid_action})/(%{INT:squid_reply_code}) (%{INT:squid_request_size}) (%{WORD:squid_method}) (%{URIPROTO:squid_request_protocol})://(%{DATA:squid_request_hostname}) - (%{WORD:squid_heirarchy})/(%{IPV4:squid_dest_ip}) (%{WORD:squid_content_type})/(%{WORD:squid_content_object}))
+RADIUSINFO ((%{SYSLOGTIMESTAMP:radius_timestamp}) (%{YEAR}) : (%{WORD:radius_severity}): (%{GREEDYDATA:radius_messsage}))
+RADIUSERROR ((%{SYSLOGTIMESTAMP:radius_timestamp}) (%{YEAR}) : (%{WORD:radius_severity}): (%{DATA:radius_module}): (%{GREEDYDATA:radius_messsage}))
+RADIUSAUTHOKMAC ((%{SYSLOGTIMESTAMP:radius_timestamp}) (%{YEAR}) : (%{WORD:radius_severity}): (%{GREEDYDATA:radius_login_status}) \[(%{USERNAME:radius_user})/(%{USERNAME:radius_password})\] \(from client (%{GREEDYDATA:radius_from_client}) port (%{INT:radius_nas_port}) (%{WORD}) (%{GREEDYDATA:radius_mac})\))
+RADIUSAUTHOK ((%{SYSLOGTIMESTAMP:radius_timestamp}) (%{YEAR}) : (%{WORD:radius_severity}): (%{GREEDYDATA:radius_login_status}) \[(%{USERNAME:radius_user})/(%{USERNAME:radius_password})\] \(from client (%{GREEDYDATA:radius_from_client}) port (%{INT:radius_nas_port}))
+RADIUSAUTHFAIL ((%{SYSLOGTIMESTAMP:radius_timestamp}) (%{YEAR}) : (%{WORD:radius_severity}): (%{GREEDYDATA:radius_login_status}): \[(%{USERNAME:radius_user})/(%{USERNAME:radius_password})\] \(from client (%{GREEDYDATA:radius_from_client}) port (%{INT:radius_nas_port}))
+FAIL2BAN %{TIMESTAMP_ISO8601:timestamp} %{JAVACLASS:criteria}: %{LOGLEVEL:level} \[%{WORD:service}\] Ban %{IPV4:clientip}
+
+#Audit
+AUDIT type=%{WORD:audit_type} msg=audit\(%{NUMBER:audit_epoch}:%{NUMBER:audit_counter}\): user pid=%{NUMBER:audit_pid} uid=%{NUMBER:audit_uid} auid=%{NUMBER:audit_audid} subj=%{WORD:audit_subject} msg=%{GREEDYDATA:audit_message} 
+AUDITLOGIN type=%{WORD:audit_type} msg=audit\(%{NUMBER:audit_epoch}:%{NUMBER:audit_counter}\): login pid=%{NUMBER:audit_pid} uid=%{NUMBER:audit_uid} old auid=%{NUMBER:old_auid} new auid=%{NUMBER:new_auid} old ses=%{NUMBER:old_ses} new ses=%{NUMBER:new_ses}
+
+#Apache 2
+HTTPERRORDATE %{DAY} %{MONTH} %{MONTHDAY} %{TIME} %{YEAR}
+APACHEERRORLOG \[%{HTTPERRORDATE:timestamp}\] \[%{WORD:severity}\] \[client %{IPORHOST:clientip}\] %{GREEDYDATA:message_remainder}
+
+#Nginx
+NGUSERNAME [a-zA-Z\.\@\-\+_%]+
+NGUSER %{NGUSERNAME}
+NGINXACCESS %{IPORHOST:clientip} %{NGUSER:ident} %{NGUSER:auth} \[%{HTTPDATE:timestamp}\] "%{WORD:verb} %{URIPATHPARAM:request} HTTP/%{NUMBER:httpversion}" %{NUMBER:response}  (?:%{NUMBER:bytes}|-) (?:"(?:%{URI:referrer}|-)"|%{QS:referrer}) %{QS:agent} %{QS:xforwardedfor} %{IPORHOST:host} %{BASE10NUM:request_duration}
+
+#postgresql
+POSTGRESQL %{DATESTAMP:timestamp} %{TZ} %{DATA:user_id} %{GREEDYDATA:connection_id} %{POSINT:pid}
+
+#Redis
+REDISTIMESTAMP %{MONTHDAY} %{MONTH} %{TIME}
+REDISLOG \[%{POSINT:pid}\] %{REDISTIMESTAMP:timestamp} \* 
+
+#Iptables 
+NETFILTERMAC %{COMMONMAC:dst_mac}:%{COMMONMAC:src_mac}:%{ETHTYPE:ethtype}
+ETHTYPE (?:(?:[A-Fa-f0-9]{2}):(?:[A-Fa-f0-9]{2}))
+IPTABLES_MAC_LAYER IN=(%{WORD:in_device})? OUT=(%{WORD:out_device})? *(MAC=(%{NETFILTERMAC})?)?
+IPTABLES_SRC_DEST SRC=(%{IP:src_ip})? DST=(%{IP:dst_ip})?
+IPTABLES_FLAGS LEN=%{INT:pkt_length} *(TOS=%{BASE16NUM:pkt_tos})? *(PREC=%{BASE16NUM:pkt_prec})? *(TTL=%{INT:pkt_ttl})? *(ID=%{INT:pkt_id})? (?:DF)*
+IPTABLES_PROTOCOL PROTO=%{WORD:protocol}
+IPTABLES_HEADER %{SYSLOGTIMESTAMP:timestamp} %{HOSTNAME} .* %{IPTABLES_MAC_LAYER} %{IPTABLES_SRC_DEST} %{IPTABLES_FLAGS} %{IPTABLES_PROTOCOL}
+IPTABLES_IP_SUFFIX SPT=%{INT:src_port} DPT=%{INT:dst_port} *(WINDOW=%{INT:pkt_window})? *(RES=%{BASE16NUM:pkt_res})? .* *(URGP=%{INT:pkt_urgp})?
+IPTABLES_IP %{IPTABLES_HEADER} %{IPTABLES_IP_SUFFIX}
+IPTABLES_ICMP %{IPTABLES_HEADER} *(TYPE=%{INT:icmp_type})? *(CODE=%{BASE16NUM:icmp_code})?
+IPTABLES_GENERIC %{IPTABLES_HEADER} (?<content>(.|\r|\n)*)
+IPTABLES_ERROR %{SYSLOGTIMESTAMP:timestamp} %{HOSTNAME} .* %{IPTABLES_MAC_LAYER} %{IPTABLES_SRC_DEST} (?<content>(.|\r|\n)*)
