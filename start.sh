@@ -134,12 +134,12 @@ logstash_config() {
 
   if [ "${OUTPUT_PLUGIN}" == "kafka" ] ; then
     output+=("  kafka {\\n")
-  #  output+=("    codec => gelf { custom_fields => [ 'testing', 'logstash' ] }\\n")
+    #output+=("    codec => gelf { custom_fields => [ 'testing', 'logstash' ] }\\n")
     output+=("    codec => gelf {}\\n")
     output+=("    broker_list => \"${KAFKA_BROKER_HOST}:${KAFKA_BROKER_PORT}\"\\n")
     output+=("    topic_id => \"${KAFKA_TOPIC_ID}\"\\n")
     output+=("  }\\n")
-  elif [ "${OUTPUT_PLUGIN}" != "none" ] ; then
+  elif [ "${OUTPUT_PLUGIN}" == "none" ] ; then
     touch /tmp/none
   else
     output+=("  gelf {\\n")
@@ -176,6 +176,8 @@ logstash_config() {
     echo "  #end of output gelf generate configutation" >> ${LOGSTASH_CONFIGURATION_FILE_TMP}
     tail -n +$line_output ${LOGSTASH_CONFIGURATION_FILE_TEMPLATE} >> ${LOGSTASH_CONFIGURATION_FILE_TMP}
     cp ${LOGSTASH_CONFIGURATION_FILE_TMP} ${LOGSTASH_CONFIGURATION_FILE_TEMPLATE}
+  else
+    echo "no output" |tee /tmp/debug
   fi
   if [ -n "${output_stdout}" ] ; then
     line_output_stdout=$(grep -n '#begin of output stdout generate configuration' ${LOGSTASH_CONFIGURATION_FILE_TEMPLATE}|awk -F ':' '{print $1}')
