@@ -176,8 +176,6 @@ logstash_config() {
     echo "  #end of output gelf generate configutation" >> ${LOGSTASH_CONFIGURATION_FILE_TMP}
     tail -n +$line_output ${LOGSTASH_CONFIGURATION_FILE_TEMPLATE} >> ${LOGSTASH_CONFIGURATION_FILE_TMP}
     cp ${LOGSTASH_CONFIGURATION_FILE_TMP} ${LOGSTASH_CONFIGURATION_FILE_TEMPLATE}
-  else
-    echo "no output" |tee /tmp/debug
   fi
   if [ -n "${output_stdout}" ] ; then
     line_output_stdout=$(grep -n '#begin of output stdout generate configuration' ${LOGSTASH_CONFIGURATION_FILE_TEMPLATE}|awk -F ':' '{print $1}')
