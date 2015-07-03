@@ -15,6 +15,17 @@ LOGSTASH_CONFIGURATION_FILE_TEMPLATE="/opt/logstash.conf"
 LOGSTASH_CONFIGURATION_FOLDER_TEMPLATE="/opt/conf.d"
 LOGSTASH_CONFIGURATION_FILE_TMP="/tmp/logstash.conf"
 
+LOGSTASH_ROOT="/opt/logstash"
+LOGSTASH_USER="logstash"
+LOGSTASH_GROUP="logstash"
+LOGSTASH_HOME="/var/lib/logstash"
+LOGSTASH_HEAP_SIZE="500m"
+LOGSTASH_LOG_FOLDER="/var/log/logstash"
+LOGSTASH_LOG_FILE="${LOGSTASH_LOG_FOLDER}/logstash.log"
+LOGSTASH_OPEN_FILES="16384"
+LOGSTASH_NICE="9"
+LOGSTASH_START_OPTIONS=""
+
 download_config() {
     local config_url="$1"
     local config_dir="$2"
@@ -134,7 +145,7 @@ logstash_config() {
 
   if [ "${OUTPUT_PLUGIN}" == "kafka" ] ; then
     output+=("  kafka {\\n")
-    #output+=("    codec => gelf { custom_fields => [ 'testing', 'logstash' ] }\\n")
+  #  output+=("    codec => gelf { custom_fields => [ 'testing', 'logstash' ] }\\n")
     output+=("    codec => gelf {}\\n")
     output+=("    broker_list => \"${KAFKA_BROKER_HOST}:${KAFKA_BROKER_PORT}\"\\n")
     output+=("    topic_id => \"${KAFKA_TOPIC_ID}\"\\n")
@@ -230,10 +241,54 @@ logstash_forwarder_keygen() {
   fi
 }
 
-kill_logstash ()
-{
+kill_logstash () {
   kill $(ps ux | grep logstash | grep java | grep agent | awk '{ print $2}')
   exit
+}
+
+check_logstash () {
+  # create logstash group
+  if ! getent group ${LOGSTASH_GROUP} >/dev/null; then
+    groupadd -r ${LOGSTASH_GROUP}
+  fi
+  # create logstash user
+  if ! getent passwd ${LOGSTASH_USER} >/dev/null; then
+    useradd -M -r -g ${LOGSTASH_GROUP} -d ${LOGSTASH_HOME} \
+      -s /usr/sbin/nologin -c "LogStash Service User" ${LOGSTASH_USER}
+  fi
+  # chown folder
+  chown -R ${LOGSTASH_USER}:${LOGSTASH_GROUP} ${LOGSTASH_ROOT}
+  [ ! -d "${LOGSTASH_LOG_FOLDER}" ] && mkdir ${LOGSTASH_LOG_FOLDER}
+  chown ${LOGSTASH_USER}:${LOGSTASH_GROUP} ${LOGSTASH_LOG_FOLDER}
+  [ ! -d "${LOGSTASH_HOME}" ] && mkdir -p ${LOGSTASH_HOME}
+  chown ${LOGSTASH_USER}:${LOGSTASH_GROUP} ${LOGSTASH_HOME}
+}
+
+
+start_logstash () {
+  if [ `id -u` -ne 0 ]; then
+   echo "You need root privileges to run this script"
+   exit 1
+  fi
+  LOGSTASH_JAVA_OPTIONS="${LOGSTASH_JAVA_OPTIONS} -Djava.io.tmpdir=${LOGSTASH_HOME}"
+  HOME=${LOGSTASH_HOME}
+  export PATH HOME LOGSTASH_HEAP_SIZE LOGSTASH_JAVA_OPTS LOGSTASH_USE_GC_LOGGING
+  # set ulimit as (root, presumably) first, before we drop privileges
+  ulimit -n ${LOGSTASH_OPEN_FILES}
+  program="${LOGSTASH_ROOT}/bin/logstash"
+  args="agent -f ${LOGSTASH_CONFIGURATION_FOLDER} "
+  if [ "x$LOG" = "x1" -o "x$LOG" = "xtrue" ] ; then
+    args+="-l ${LOGSTASH_LOG_FILE} "
+  fi
+  if [ "x$DEBUG" = "x1" -o "x$DEBUG" = "xtrue" ] ; then
+    args+="--debug "
+  fi
+  args+="${LOGSTASH_START_OPTIONS}"
+  # Run the program!
+  nice -n ${LOGSTASH_NICE} chroot --userspec $LOGSTASH_USER:$LOGSTASH_GROUP / sh -c "
+    cd $LOGSTASH_HOME
+    ulimit -n ${LOGSTASH_OPEN_FILES}
+    exec $program $args" &
 }
 
 
@@ -245,10 +300,7 @@ logstash_forwarder_keygen
 
 trap kill_logstash SIGINT SIGTERM SIGHUP
 
-if [ "x$DEBUG" = "x1" -o "x$DEBUG" = "xtrue" ] ; then
-  /opt/logstash/bin/logstash agent -f /etc/logstash/conf.d --debug &
-else
-  /opt/logstash/bin/logstash agent -f /etc/logstash/conf.d &
-fi
+check_logstash
+start_logstash
 pid=$!
 wait $pid

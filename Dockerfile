@@ -1,10 +1,10 @@
-FROM       ubuntu:vivid
+FROM       ubuntu:14.04
 
 MAINTAINER Edward De Faria <edward.de-faria@ovh.net>
 
 ENV        DEBIAN_FRONTEND noninteractive
 
-# Install Java 7
+# Install Java 8
 RUN        apt-get update -qq && \
            apt-get install -qq curl software-properties-common software-properties-common > /dev/null && \
            apt-get update -qq && \
@@ -12,23 +12,32 @@ RUN        apt-get update -qq && \
            apt-get update -qq && \
            echo debconf shared/accepted-oracle-license-v1-1 select true | debconf-set-selections && \
            echo debconf shared/accepted-oracle-license-v1-1 seen true | debconf-set-selections && \
-           apt-get install -qq oracle-java7-installer oracle-java7-set-default > /dev/null && \
+           apt-get install -qq oracle-java8-installer oracle-java8-set-default > /dev/null && \
            apt-get clean && rm -rf /var/lib/apt/lists/* && \
-           rm -rf /var/cache/oracle-jdk7-installer
-ENV 	   JAVA_HOME /usr/lib/jvm/java-7-oracle
+           rm -rf /var/cache/oracle-jdk8-installer
+ENV 	   JAVA_HOME /usr/lib/jvm/java-8-oracle
 
 # Install logstash dependencies
 RUN        apt-get update -qq && \
            apt-get install -qq ruby ruby-dev jruby make rake git ca-certificates ca-certificates-java > /dev/null && \ 
            apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Install logstash
+# Install logstash from package
 RUN        wget -q -O - http://packages.elasticsearch.org/GPG-KEY-elasticsearch | apt-key add - && \
            echo 'deb http://packages.elasticsearch.org/logstash/1.5/debian stable main' > /etc/apt/sources.list.d/logstash.list && \
            apt-get update -qq && \
            apt-get install -qq logstash && \
            apt-get clean && rm -rf /var/lib/apt/lists/* && \
            mkdir -p /etc/logstash/conf.d
+# Install Logstash from source
+#ENV        LOGSTASH_VERSION 1.5.2
+#RUN        cd /tmp && wget -q https://github.com/elastic/logstash/archive/v${LOGSTASH_VERSION}.tar.gz && \
+#           tar -xzf v${LOGSTASH_VERSION}.tar.gz -C /opt && \
+#           mv /opt/logstash-${LOGSTASH_VERSION} /opt/logstash && \
+#           rm -f v${LOGSTASH_VERSION}.tar.gz && \
+#           cd /opt/logstash  && \
+#           rake bootstrap >/dev/null && \
+#           mkdir -p /etc/logstash/conf.d
 
 # Copy and install patched version of gelf-rb/logstash-output-gelf
 RUN        cd /opt && \
