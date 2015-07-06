@@ -22,7 +22,6 @@ LOGSTASH_HOME="/var/lib/logstash"
 LOGSTASH_HEAP_SIZE="500m"
 LOGSTASH_LOG_FOLDER="/var/log/logstash"
 LOGSTASH_LOG_FILE="${LOGSTASH_LOG_FOLDER}/logstash.log"
-LOGSTASH_OPEN_FILES="16384"
 LOGSTASH_NICE="9"
 LOGSTASH_START_OPTIONS=""
 
@@ -273,8 +272,6 @@ start_logstash () {
   LOGSTASH_JAVA_OPTIONS="${LOGSTASH_JAVA_OPTIONS} -Djava.io.tmpdir=${LOGSTASH_HOME}"
   HOME=${LOGSTASH_HOME}
   export PATH HOME LOGSTASH_HEAP_SIZE LOGSTASH_JAVA_OPTS LOGSTASH_USE_GC_LOGGING
-  # set ulimit as (root, presumably) first, before we drop privileges
-  ulimit -n ${LOGSTASH_OPEN_FILES}
   program="${LOGSTASH_ROOT}/bin/logstash"
   args="agent -f ${LOGSTASH_CONFIGURATION_FOLDER} "
   if [ "x$LOG" = "x1" -o "x$LOG" = "xtrue" ] ; then
@@ -284,11 +281,14 @@ start_logstash () {
     args+="--debug "
   fi
   args+="${LOGSTASH_START_OPTIONS}"
-  # Run the program!
-  nice -n ${LOGSTASH_NICE} chroot --userspec $LOGSTASH_USER:$LOGSTASH_GROUP / sh -c "
-    cd $LOGSTASH_HOME
-    ulimit -n ${LOGSTASH_OPEN_FILES}
-    exec $program $args" &
+  if [ "x$CHROOT" = "x1" -o "x$CHROOT" = "xtrue" ] ; then
+    # Run the program!
+    nice -n ${LOGSTASH_NICE} chroot --userspec $LOGSTASH_USER:$LOGSTASH_GROUP / sh -c "
+      cd $LOGSTASH_HOME
+      exec $program $args" &
+  else
+    $program $args &
+  fi
 }
 
 
