@@ -42,7 +42,8 @@ RUN        wget -q -O - http://packages.elasticsearch.org/GPG-KEY-elasticsearch 
 # Copy and install patched version of gelf-rb/logstash-output-gelf
 RUN        cd /opt && \
            git clone https://github.com/edefaria/patch-gelf-output-logstash && \
-           /opt/patch-gelf-output-logstash/update-gelf.sh
+           /opt/patch-gelf-output-logstash/update-gelf.sh && \
+           /opt/patch-gelf-output-logstash/uninstall-plugin.sh
 
 VOLUME     [ "/etc/logstash/conf.d" ]
 
