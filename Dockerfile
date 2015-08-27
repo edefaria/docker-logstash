@@ -19,7 +19,7 @@ ENV 	   JAVA_HOME /usr/lib/jvm/java-8-oracle
 
 # Install logstash dependencies
 RUN        apt-get update -qq && \
-           apt-get install -qq ruby ruby-dev jruby make rake git ca-certificates ca-certificates-java > /dev/null && \ 
+           apt-get install -qq --no-install-recommends ruby ruby-dev jruby make rake git ca-certificates ca-certificates-java > /dev/null && \
            apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install logstash from package
@@ -30,7 +30,7 @@ RUN        wget -q -O - http://packages.elasticsearch.org/GPG-KEY-elasticsearch 
            apt-get clean && rm -rf /var/lib/apt/lists/* && \
            mkdir -p /etc/logstash/conf.d
 # Install Logstash from source
-#ENV        LOGSTASH_VERSION 1.5.2
+#ENV        LOGSTASH_VERSION 1.5.4
 #RUN        cd /tmp && wget -q https://github.com/elastic/logstash/archive/v${LOGSTASH_VERSION}.tar.gz && \
 #           tar -xzf v${LOGSTASH_VERSION}.tar.gz -C /opt && \
 #           mv /opt/logstash-${LOGSTASH_VERSION} /opt/logstash && \
@@ -40,10 +40,9 @@ RUN        wget -q -O - http://packages.elasticsearch.org/GPG-KEY-elasticsearch 
 #           mkdir -p /etc/logstash/conf.d
 
 # Copy and install patched version of gelf-rb/logstash-output-gelf
-RUN        cd /opt && \
-           git clone https://github.com/edefaria/patch-gelf-output-logstash && \
-           /opt/patch-gelf-output-logstash/update-gelf.sh && \
+RUN        cd /opt && git clone https://github.com/edefaria/patch-gelf-output-logstash && \
            /opt/patch-gelf-output-logstash/uninstall-plugin.sh
+RUN        /opt/patch-gelf-output-logstash/update-gelf.sh
 
 VOLUME     [ "/etc/logstash/conf.d" ]
 
