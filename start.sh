@@ -120,9 +120,11 @@ logstash_config() {
     fi
     if [ -z "${GELF_OUTPUT_CHECK_SSL}" ] ; then
       echo "WARNING no environmnet variable GELF_OUTPUT_CHECK_SSL is define. Use \"${DEFAULT_GELF_OUTPUT_CHECK_SSL}\" by default."
+      export GELF_OUTPUT_CHECK_SSL=${DEFAULT_GELF_OUTPUT_CHECK_SSL}
     fi
     if [ -z "${GELF_OUTPUT_TLS_VERSION}" ] ; then
       echo "WARNING no environmnet variable GELF_OUTPUT_TLS_VERSION is define. Use \"${DEFAULT_GELF_OUTPUT_TLS_VERSION}\" by default."
+      export GELF_OUTPUT_TLS_VERSION=${DEFAULT_GELF_OUTPUT_TLS_VERSION}
     fi
   fi
 
