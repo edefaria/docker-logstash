@@ -4,6 +4,8 @@ DEFAULT_GELF_OUTPUT_HOST="localhost"
 DEFAULT_GELF_OUTPUT_PORT="12202"
 DEFAULT_GELF_OUTPUT_PROTOCOL="tcp"
 DEFAULT_GELF_OUTPUT_TLS="true"
+DEFAULT_GELF_OUTPUT_CHECK_SSL="true"
+DEFAULT_GELF_OUTPUT_TLS_VERSION="TLSv1_2"
 DEFAULT_OUTPUT_PLUGIN="gelf"
 DEFAULT_KAFKA_BROKER_HOST="localhost"
 DEFAULT_KAFKA_BROKER_PORT="9092"
@@ -116,6 +118,12 @@ logstash_config() {
       echo "ERROR UDP protocol does not support TLS encryption method."
       exit 1
     fi
+    if [ -z "${GELF_OUTPUT_CHECK_SSL}" ] ; then
+      echo "WARNING no environmnet variable GELF_OUTPUT_CHECK_SSL is define. Use \"${DEFAULT_GELF_OUTPUT_CHECK_SSL}\" by default."
+    fi
+    if [ -z "${GELF_OUTPUT_TLS_VERSION}" ] ; then
+      echo "WARNING no environmnet variable GELF_OUTPUT_TLS_VERSION is define. Use \"${DEFAULT_GELF_OUTPUT_TLS_VERSION}\" by default."
+    fi
   fi
 
   if [ -z "${GELF_STATIC_FIELDS}" ] ; then
@@ -157,6 +165,8 @@ logstash_config() {
     output+=("    port => \"${GELF_OUTPUT_PORT}\"\\n")
     output+=("    protocol => \"${GELF_OUTPUT_PROTOCOL}\"\\n")
     output+=("    tls => \"${GELF_OUTPUT_TLS}\"\\n")
+    output+=("    check_ssl => \"${GELF_OUTPUT_CHECK_SSL}\"\\n")
+    output+=("    tls_version => \"${GELF_OUTPUT_TLS_VERSION}\"\\n")
     output+=("  }\\n")
   fi
   if [ "x$DEBUG" == "x1" ] ; then
