@@ -23,26 +23,26 @@ RUN        apt-get update -qq && \
            apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install logstash from package
-RUN        wget -q -O - http://packages.elasticsearch.org/GPG-KEY-elasticsearch | apt-key add - && \
-           echo 'deb http://packages.elasticsearch.org/logstash/1.5/debian stable main' > /etc/apt/sources.list.d/logstash.list && \
-           apt-get update -qq && \
-           apt-get install -qq logstash && \
-           apt-get clean && rm -rf /var/lib/apt/lists/* && \
-           mkdir -p /etc/logstash/conf.d
-# Install Logstash from source
-#ENV        LOGSTASH_VERSION 1.5.4
-#RUN        cd /tmp && wget -q https://github.com/elastic/logstash/archive/v${LOGSTASH_VERSION}.tar.gz && \
-#           tar -xzf v${LOGSTASH_VERSION}.tar.gz -C /opt && \
-#           mv /opt/logstash-${LOGSTASH_VERSION} /opt/logstash && \
-#           rm -f v${LOGSTASH_VERSION}.tar.gz && \
-#           cd /opt/logstash  && \
-#           rake bootstrap >/dev/null && \
+#RUN        wget -q -O - http://packages.elasticsearch.org/GPG-KEY-elasticsearch | apt-key add - && \
+#           echo 'deb http://packages.elasticsearch.org/logstash/1.5/debian stable main' > /etc/apt/sources.list.d/logstash.list && \
+#           apt-get update -qq && \
+#           apt-get install -qq logstash && \
+#           apt-get clean && rm -rf /var/lib/apt/lists/* && \
 #           mkdir -p /etc/logstash/conf.d
+# Install Logstash from source
+ENV        LOGSTASH_VERSION 2.0.0-beta1
+RUN        cd /tmp && wget -q https://github.com/elastic/logstash/archive/v${LOGSTASH_VERSION}.tar.gz && \
+           tar -xzf v${LOGSTASH_VERSION}.tar.gz -C /opt && \
+           mv /opt/logstash-${LOGSTASH_VERSION} /opt/logstash && \
+           rm -f v${LOGSTASH_VERSION}.tar.gz && \
+           cd /opt/logstash  && \
+           rake bootstrap >/dev/null && \
+           mkdir -p /etc/logstash/conf.d
 
 # Copy and install patched version of gelf-rb/logstash-output-gelf
-RUN        cd /opt && git clone https://github.com/edefaria/patch-gelf-output-logstash && \
+RUN        cd /opt && git clone https://github.com/edefaria/patch-gelf-output-logstash-beta && \
            /opt/patch-gelf-output-logstash/uninstall-plugin.sh
-RUN        /opt/patch-gelf-output-logstash/update-gelf.sh
+RUN        /opt/patch-gelf-output-logstash/update-gelf-beta.sh
 
 VOLUME     [ "/etc/logstash/conf.d" ]
 
