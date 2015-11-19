@@ -1,8 +1,10 @@
-## docker-logstash : Docker image with logstash 1.5.X + TCP/TLS gelf support
+## docker-logstash : Docker image with logstash 2.X + TCP/TLS gelf support
 
 * [DockerFile](https://github.com/edefaria/docker-logstash)
 * [Logstash](https://github.com/elastic/logstash)
 * [Logstash-output-gelf](https://github.com/edefaria/logstash-output-gelf)
+* [Logstash-input-gelf](https://github.com/edefaria/logstash-input-gelf)
+* [Logstash-codec-gelf](https://github.com/edefaria/logstash-codec-gelf)
 * [Gelf-rb](https://github.com/edefaria/gelf-rb)
 
 ### Services
