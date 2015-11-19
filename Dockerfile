@@ -30,7 +30,7 @@ RUN        apt-get update -qq && \
 #           apt-get clean && rm -rf /var/lib/apt/lists/* && \
 #           mkdir -p /etc/logstash/conf.d
 # Install Logstash from source
-ENV        LOGSTASH_VERSION 2.0.0-beta1
+ENV        LOGSTASH_VERSION 2.0.0
 RUN        cd /tmp && wget -q https://github.com/elastic/logstash/archive/v${LOGSTASH_VERSION}.tar.gz && \
            tar -xzf v${LOGSTASH_VERSION}.tar.gz -C /opt && \
            mv /opt/logstash-${LOGSTASH_VERSION} /opt/logstash && \
@@ -40,7 +40,7 @@ RUN        cd /tmp && wget -q https://github.com/elastic/logstash/archive/v${LOG
            mkdir -p /etc/logstash/conf.d
 
 # Copy and install patched version of gelf-rb/logstash-output-gelf
-RUN        cd /opt && git clone https://github.com/edefaria/patch-gelf-output-logstash-beta && \
+RUN        cd /opt && git clone https://github.com/edefaria/patch-gelf-output-logstash && \
            /opt/patch-gelf-output-logstash/uninstall-plugin.sh
 RUN        /opt/patch-gelf-output-logstash/update-gelf-beta.sh
 
