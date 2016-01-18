@@ -6,7 +6,7 @@ ENV        DEBIAN_FRONTEND noninteractive
 
 # Install Java 8
 RUN        apt-get update -qq && \
-           apt-get install -qq curl software-properties-common software-properties-common > /dev/null && \
+           apt-get install -qq curl software-properties-common > /dev/null && \
            apt-get update -qq && \
            add-apt-repository -y ppa:webupd8team/java && \
            apt-get update -qq && \
@@ -19,18 +19,19 @@ ENV 	   JAVA_HOME /usr/lib/jvm/java-8-oracle
 
 # Install logstash dependencies
 RUN        apt-get update -qq && \
-           apt-get install -qq --no-install-recommends ruby ruby-dev jruby make rake git ca-certificates ca-certificates-java > /dev/null && \
+           apt-get install -qq --no-install-recommends ruby ruby-dev jruby make rake git ca-certificates ca-certificates-java  $(apt-get -s dist-upgrade|awk '/^Inst.*ecurity/ {print $2}') > /dev/null && \
            apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install logstash from package
 RUN        wget -q -O - http://packages.elasticsearch.org/GPG-KEY-elasticsearch | apt-key add - && \
-           echo 'deb http://packages.elasticsearch.org/logstash/2.0/debian stable main' > /etc/apt/sources.list.d/logstash.list && \
+           echo 'deb http://packages.elasticsearch.org/logstash/2.1/debian stable main' > /etc/apt/sources.list.d/logstash.list && \
            apt-get update -qq && \
            apt-get install -qq logstash && \
            apt-get clean && rm -rf /var/lib/apt/lists/* && \
+           cd /opt/logstash ; git init && \
            mkdir -p /etc/logstash/conf.d
 # Install Logstash from source
-#ENV        LOGSTASH_VERSION 2.0.0
+#ENV        LOGSTASH_VERSION 2.1.1
 #RUN        cd /tmp && wget -q https://github.com/elastic/logstash/archive/v${LOGSTASH_VERSION}.tar.gz && \
 #           tar -xzf v${LOGSTASH_VERSION}.tar.gz -C /opt && \
 #           mv /opt/logstash-${LOGSTASH_VERSION} /opt/logstash && \
@@ -44,7 +45,7 @@ RUN        cd /opt && git clone https://github.com/edefaria/patch-gelf-output-lo
            /opt/patch-gelf-output-logstash/uninstall-plugin.sh
 RUN        /opt/patch-gelf-output-logstash/update-gelf.sh
 
-VOLUME     [ "/etc/logstash/conf.d" ]
+VOLUME     [ "/etc/logstash/conf.d",  "/opt/logstash/patterns" ]
 
 COPY       patterns /opt/logstash/patterns
 #COPY       conf.d        /opt/conf.d
