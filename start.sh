@@ -22,7 +22,7 @@ LOGSTASH_USER="logstash"
 LOGSTASH_GROUP="logstash"
 LOGSTASH_HOME="/var/lib/logstash"
 if [ -z "${LS_HEAP_SIZE}"  ]; then
-	LS_HEAP_SIZE="500m"
+	LS_HEAP_SIZE="1000m"
 fi
 LOGSTASH_LOG_FOLDER="/var/log/logstash"
 LOGSTASH_LOG_FILE="${LOGSTASH_LOG_FOLDER}/logstash.log"
