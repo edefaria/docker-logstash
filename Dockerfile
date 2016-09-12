@@ -40,10 +40,12 @@ RUN        wget -q -O - http://packages.elasticsearch.org/GPG-KEY-elasticsearch 
 #           rake bootstrap >/dev/null && \
 #           mkdir -p /etc/logstash/conf.d
 
-# Copy and install patched version of gelf-rb/logstash-output-gelf
+# Copy and install patched version for better supporting gelf
 RUN        cd /opt && git clone https://github.com/edefaria/patch-gelf-output-logstash && \
-           /opt/patch-gelf-output-logstash/uninstall-plugin.sh
-RUN        /opt/patch-gelf-output-logstash/update-gelf.sh
+           /opt/patch-gelf-output-logstash/uninstall-plugin.sh && \
+           /opt/patch-gelf-output-logstash/update-gelf.sh && \
+           /opt/logstash/bin/plugin install logstash-filter-aggregate && \
+           /opt/logstash/bin/plugin install logstash-filter-prune
 
 # Update logstash-filter-geoip to 3.0.1 to support ipv6 => TO DELETE in logstash 5.0.0
 # Update logstash-output-tcp to 3.2.0 to support TLS => TO DELETE in logstash 5.0.0
