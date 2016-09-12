@@ -18,7 +18,7 @@
 ### Build
 
 ```
-$ git clone https://github.com/edefaria/patch-gelf-output-logstash.git
+$ git clone https://github.com/edefaria/docker-logstash.git
 $ cd docker-logstash
 $ docker build -t docker-logstash .
 ```
